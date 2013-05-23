@@ -1,6 +1,8 @@
 import urllib.request
 import xml.etree.ElementTree as ET
 import datetime
+#import tkinter
+
 req = urllib.request.Request('http://content.playwarframe.com/alerts.xml')
 
 minimumCredits=6000
@@ -65,20 +67,28 @@ rewardsToIgnore = [
 'Rifle Amp (Artifact)'
 ]
 
+class Parser:
+  def fetch(self):
+    r = urllib.request.urlopen(req)
+    sitestring=r.read()
+    sitestring=sitestring.replace(b'wf:', b'')
+    root=ET.fromstring(sitestring)
+    return root
+    
+  def parse(self, root):
+    items=root.find('channel').findall('item')
+    for alert in items:
+      alertText = alert.find('title').text
+      alertArray = alertText.split(' - ')
+      timeEnd = datetime.datetime.strptime(alert.find('expiry').text, "%a, %d %b %Y %H:%M:%S %z")
+      timeNow = datetime.datetime.now(datetime.timezone.utc)
+      timeLeft = timeEnd - timeNow
+      isActive = timeEnd > timeNow
+      if (isActive):
+        print(alertText, "-", timeLeft)
+        if (minimumCredits < int(alertArray[2][:-2]) or (len(alertArray)==4 and alertArray[3] not in rewardsToIgnore)):
+          print("EPIC")
 
-r = urllib.request.urlopen(req)
-sitestring=r.read()
-sitestring=sitestring.replace(b'wf:', b'')
-root=ET.fromstring(sitestring)
-items=root.find('channel').findall('item')
-for alert in items:
-  alertText=alert.find('title').text
-  alertArray=alertText.split(' - ')
-  timeEnd = datetime.datetime.strptime(alert.find('expiry').text, "%a, %d %b %Y %H:%M:%S %z")
-  timeNow = datetime.datetime.now(datetime.timezone.utc)
-  timeLeft = timeEnd - timeNow
-  isActive = timeEnd > timeNow
-  if (isActive):
-    print(alertText, "-", timeLeft)
-    if (minimumCredits < int(alertArray[2][:-2]) or (len(alertArray)==4 and alertArray[3] not in rewardsToIgnore)):
-      print("EPIC")
+test = Parser()
+root = test.fetch()
+test.parse(root)
