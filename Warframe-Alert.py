@@ -4,7 +4,6 @@ import datetime
 import tkinter
 import time
 
-req = urllib.request.Request('http://content.playwarframe.com/alerts.xml')
 
 minimumCredits=6000
 rewards=[
@@ -92,7 +91,6 @@ class GUI:
 
   def fetchAlerts(self):
     self.alertRoot = self.parser.fetch()
-    print("fetching Alerts")
     self.root.after(120000, self.fetchAlerts)
   def updateAlerts(self):
     self.alertText.set(self.parser.parse(self.alertRoot))
@@ -123,7 +121,30 @@ class Parser:
           print("EPIC")
     return alertTextCombined
 
+class Config:
+  def __init__(self):
+    self.load()
+  def load(self):
+    xml = ET.parse('config.xml')
+    root = xml.getroot()
+    global website
+    website = root.find("website").text
+    rewardArray = []
+    rewards = root.find("rewards")
+    for rewardType in rewards:
+      if (rewardType.tag!="Others"):
+        for reward in rewardType:
+          rewardArray.append(reward.text +" ("+reward.tag+")")
+      else:
+        for reward in rewardType:
+          rewardArray.append(reward.text)
+    print(rewardArray)
 
+    
+
+#website = ''
+Config()
+req = urllib.request.Request(website)
 
 app = GUI()
 
